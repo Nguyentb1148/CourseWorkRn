@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Button, TouchableOpacity, Switch, Mo
 import Database from "../DataBase";
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Picker } from '@react-native-picker/picker';
-
+import { forceUpdate } from 'react'
 const DetailScreen = ({ route }) => {
     const hike = route.params.hike; // Access the 'hike' object from route.params
 
@@ -12,12 +12,14 @@ const DetailScreen = ({ route }) => {
     const [editedLocation, setEditedLocation] = useState('');
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     const [editedDate, setEditedDate] = useState(new Date()); // Initialize with the current date
-    const [editedParkingAvailable, setEditedParkingAvailable] = useState('No');
+    const [editedParkingAvailable, setEditedParkingAvailable] = useState(false);
     const [editedLength, setEditedLength] = useState('');
     const [editedDifficulty, setEditedDifficulty] = useState('Easy');
     const [editedDescription, setEditedDescription] = useState('');
     const [isDifficultyPickerVisible, setDifficultyPickerVisible] = useState(false);
     const difficultyLevels = ['Easy', 'Medium', 'Hard', 'Very Hard'];
+    const [forceRender, setForceRender] = useState(false);
+    const [forceRenderKey, setForceRenderKey] = useState(0);
 
     useEffect(() => {
         const fetchHikeDetails = async () => {
@@ -28,7 +30,7 @@ const DetailScreen = ({ route }) => {
                     setEditedHikeName(details.hikeName);
                     setEditedLocation(details.location);
                     setEditedDate(new Date(details.selectedDate));
-                    setEditedParkingAvailable(details.parkingAvailable);
+                    setEditedParkingAvailable(details.parkingAvailable === 'Yes'); // Update this line
                     setEditedLength(details.length);
                     setEditedDifficulty(details.difficulty);
                     setEditedDescription(details.description);
@@ -37,40 +39,52 @@ const DetailScreen = ({ route }) => {
                 }
             }
         };
-
+    
         fetchHikeDetails();
     }, [route.params]);
-
+    
     const updateHike = async () => {
-        if (!editedDate || isNaN(editedDate)) {
-            console.error('Invalid date. Please select a valid date.');
+
+        if(isNaN(editedLength)||+editedLength<=0)
+        {
+            Alert.alert("Error","Length of the hike should be positive number")
+        }
+        if (!editedDate || isNaN(editedDate)||!editedHikeName||!editedLocation||!editedDescription) {
+            Alert.alert("Error", "Please enter valid data for all fields.")    
             return;
         }
-
+    
         console.log('updateHike called. editedDate:', editedDate);
-        //const formattedDate = editedDate.toISOString().split('T')[0];
+        console.log('Before update - editedParkingAvailable:', editedParkingAvailable);
+    
         const originalDate = new Date(editedDate);
         const year = originalDate.getFullYear();
-        const month = String(originalDate.getMonth() + 1).padStart(2, '0'); 
+        const month = String(originalDate.getMonth() + 1).padStart(2, '0');
         const day = String(originalDate.getDate()).padStart(2, '0');
         const formattedDate = `${year}-${month}-${day}`;
+    
         try {
             await Database.updateHike(
                 hike.id,
                 editedHikeName,
                 editedLocation,
-                formattedDate, 
-                editedParkingAvailable,
+                formattedDate,
+                editedParkingAvailable ? 'Yes' : 'No',
                 editedLength,
                 editedDifficulty,
                 editedDescription
             );
             console.log('Hike details updated successfully');
+            console.log('Updated parkingAvailable:', editedParkingAvailable);
+    
+            // Add this log statement
+            console.log('After update - editedParkingAvailable:', editedParkingAvailable);
         } catch (error) {
             console.error('Hike details update failed,', error);
         }
     };
-
+    
+    
     const showDatePicker = () => {
         setDatePickerVisible(true);
     };
@@ -84,7 +98,7 @@ const DetailScreen = ({ route }) => {
         hideDatePicker();
     };
     return (
-        <View style={styles.container}>
+        <View key={forceRenderKey} style={styles.container}>
             <Text style={styles.text}>Name of the Hike</Text>
             <TextInput
                 style={styles.input}
@@ -116,15 +130,19 @@ const DetailScreen = ({ route }) => {
             <Text style={styles.text}>Parking available</Text>
             <Switch
                 style={styles.switch}
-                trackColor={{ No: '#767577', Yes: '#81b0ff' }}
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
                 thumbColor={'#f5dd4b'}
-                onValueChange={(value) => setEditedParkingAvailable(value)}
+                onValueChange={(value) => {
+                    console.log('Switch value changed:', value);
+                    setEditedParkingAvailable(value);
+                }}
                 value={editedParkingAvailable}
             />
+
             <Text style={styles.text}>Length of the hike</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Length (in km)"
+                placeholder="Length (in m)"
                 onChangeText={(text) => setEditedLength(text)}
                 value={editedLength}
             />

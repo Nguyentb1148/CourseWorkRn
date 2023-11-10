@@ -9,7 +9,7 @@ const AddHike = () => {
     const [location, setLocation] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [datePickerVisible, setDatePickerVisible] = useState(false);
-    const [parkingAvailable, setParkingAvailable] = useState('No');
+    const [parkingAvailable, setParkingAvailable] = useState(false); // Set default value to 'No'
     const [length, setLength] = useState('');
     const [difficulty, setDifficulty] = useState('Easy');
     const [description, setDescription] = useState('');
@@ -17,21 +17,28 @@ const AddHike = () => {
 
     const difficultyLevels = ['Easy', 'Medium', 'Hard', 'Very Hard'];
 
-    const handleAddHike=async()=>{
+    const handleAddHike = async () => {
         const originalDate = new Date(selectedDate);
+        console.log(originalDate);
         const year = originalDate.getFullYear();
-        const month = String(originalDate.getMonth() + 1).padStart(2, '0'); 
+        const month = String(originalDate.getMonth() + 1).padStart(2, '0');
         const day = String(originalDate.getDate()).padStart(2, '0');
         const formattedDate = `${year}-${month}-${day}`;
-        
-        if(!hikeName||!location||!formattedDate||!parkingAvailable||!length||!difficulty||!description){
-            Alert.alert("Error","All required fields must be filled ");
+
+        if(isNaN(length) || +length <= 0 ){
+            Alert.alert("Error","Length of the hike should be positive number")
             return;
         }
-        console.log('updateHike called. updatedHikeDetails:', formattedDate);
-        await Database.addHike(hikeName,location,formattedDate,parkingAvailable,length,difficulty,description)
-        Alert.alert("success","Your Hike added")
-    }
+        if (!hikeName || !location || !formattedDate ||  !difficulty || !description) {
+            Alert.alert("Error", "Please enter valid data for all fields.");
+            return;
+        }
+
+        console.log('add called:', formattedDate);
+        await Database.addHike(hikeName, location, formattedDate, parkingAvailable ? 'Yes' : 'No', length, difficulty, description);
+        console.log("parking available option: " + (parkingAvailable ? 'Yes' : 'No'));
+        Alert.alert("Success", "Your Hike added");
+    };
     const showDatePicker = () => {
         setDatePickerVisible(true);
     };
