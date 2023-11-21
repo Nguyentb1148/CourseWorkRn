@@ -1,7 +1,7 @@
 # CourseWorkRn
 Hiker's App
 Overview
-Welcome to the Hiker's Explorer App! This mobile application is built using Expo and React Native, offering an immersive experience for hikers to manage their hiking adventures with ease.
+Welcome to the Hiker's App! This mobile application is built using Expo and React Native, offering an immersive experience for hikers to manage their hiking adventures with ease.
 
 Features
 CRUD for Hikes:
